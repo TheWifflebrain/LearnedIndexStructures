@@ -54,6 +54,7 @@ for i in range(1, 1000):
 
 ############
 plt.figure(1)
+plt.title('The data')
 plt.plot(x, y)
 ############
 plt.figure(2)
@@ -368,13 +369,13 @@ for fine_tune_pred in pre_pos_ML:
     # the function that the linear regression predicted in the dotted line
     # it is 0 or 1 because in my testing NN can predict the wrong bucket and
     # the rest ml algo predict the pretty much the same bucket
-    if(counter == 0 or counter == 1):
-        plt.figure(fig_num)
-        #plt.title("ML algorithm:", ml_algo[counter])
-        plt.clf()
-        plt.plot(re_x_data, re_y_data, 'o', label='Actual Data', alpha=1.0)
-        plt.plot(re_x_data, error, '--', label='Regression', alpha=1.0)
-        plt.legend(loc='best')
+    plt.figure(fig_num)
+    plt.clf()
+    plt.plot(re_x_data, re_y_data, 'o', label='Actual Data', alpha=1.0)
+    plt.plot(re_x_data, error, '--', label='Regression', alpha=1.0)
+    plt.title("Bucket: " + str(in_bucket) +
+              " for: " + str(ml_algo[counter]))
+    plt.legend(loc='best')
     fig_num = fig_num + 1
     counter = counter + 1
 
