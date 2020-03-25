@@ -3,67 +3,75 @@
 # **inspiration for this code is from
 # https://github.com/Learned-Index-Structure/LIS-Training/blob/master/Example.ipynb
 
-# making the margins wider in jupyter
-from sklearn.metrics import mean_squared_error
+import os
+import csv
+import math
+import random
+import numpy as np
+import pandas as pd
+import tensorflow as tf
+
+from keras import layers
+from keras import models
+from keras.layers import Dense
+from keras.optimizers import SGD
+from keras.optimizers import Adam
+from keras.models import Sequential
+import keras.backend.tensorflow_backend as KTF
+
+from sklearn.svm import SVR
 from sklearn import ensemble
 from sklearn import linear_model
 from sklearn.tree import DecisionTreeRegressor
-from sklearn.neighbors import KNeighborsRegressor
+from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import GridSearchCV
-from sklearn.svm import SVR
-import os
-import keras.backend.tensorflow_backend as KTF
-import tensorflow as tf
-import matplotlib.pyplot as plt
+from sklearn.neighbors import KNeighborsRegressor
 from sklearn.linear_model import LinearRegression
-from keras import layers
-from keras import models
-from keras.optimizers import SGD
-from keras.optimizers import Adam
-from keras.layers import Dense
-from keras.models import Sequential
 from sklearn.model_selection import train_test_split
-import pandas as pd
-import csv
-import numpy as np
-from matplotlib.ticker import PercentFormatter
-import math
-import random
-import matplotlib.ticker as mtick
-##from IPython.core.display import display, HTML
-#display(HTML("<style>.container { width:100% !important; }</style>"))
 
-# Creating a linear dataset with a little bit of randomness
+import matplotlib.pyplot as plt
+import matplotlib.ticker as mtick
+from matplotlib.ticker import PercentFormatter
+
+# To use the GPU
+# I get errors if I do not use this code
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+config = tf.compat.v1.ConfigProto()
+config.gpu_options.allow_growth = True
+session = tf.compat.v1.Session(config=config)
+
+# Creating the dataset
 # the key or value of the data
 x = []
 # the position of the data
 y = []
-for i in range(1, 1000):
+for i in range(1, 1001):
     y.append(i)
-    # + random.randrange(0,1)
+    # as long as the function is monotonic will predict accurately
+    # so num = math.sin(i) will not predict accurately as it should
     #num = math.ceil(2 ** 3 + 4 ** (2) * + 3*i * math.log(i))
     #num = 8*i + random.randrange(0,6)
     num = (i ** 2) - 21*(i) + 34
-    #num = math.sin(i)
     x.append(num)
 
-[float(num) for num in x]
+# y will be from 1 to 1000
+# x will be num or the value of the data
+[math.ceil(float(num)) for num in x]
 [math.ceil(float(num)) for num in y]
-# x will be from 1 to 500
-# y will be num
 
-############
+# A line graph of the data
 plt.figure(1)
 plt.title('The data')
 plt.plot(x, y)
-############
+# PDF - Probability density function
+# The PDF of the data with y axis as amount in the range
 plt.figure(2)
 plt.hist(x, bins=20, rwidth=0.9,
          color='#607c8e')
 plt.title('PDF')
 plt.xlabel('x - value of the data')
 plt.ylabel('y - position of the data')
-###########
+# The PDF of the data with the y axis as percentages
 plt.figure(3)
 plt.gca().yaxis.set_major_formatter(PercentFormatter(1))
 plt.title('PDF as percentages')
@@ -71,36 +79,33 @@ plt.xlabel('x - value of the data')
 plt.ylabel('y - percentage of the data occuring')
 plt.hist(x, weights=np.ones(len(x)) / len(x),
          bins=20, rwidth=0.9, color='#607c8e')
-##########
-# The culmative distribution function
+# The culmative distribution function or CDF
 plt.figure(4)
 plt.title('CDF (∫PDF)')
 plt.xlabel('x - value of the data')
 plt.gca().yaxis.set_major_formatter(PercentFormatter(xmax=999))
 plt.ylabel('y - percentage')
 plt.plot(x, y, marker='o')
-##########
+
 # making sure there are no duplicates
-# also need to check to see if the data is sorted (I made the equation so that it would be sorted)
 duplicates = []
 for item in x:
     if x.count(item) > 1:
         duplicates.append(item)
 print(duplicates)
-############
-# writing the x to col 1 and y to col 2 in a csv file
+# the paper said to have the data be sorted also (I made the equation so that it would be sorted)
 
+# writing the x to col 1 and y to col 2 in a csv file
 with open('data2.csv', 'w', newline='') as file:
     writer = csv.writer(file)
 
     for ix, iy in zip(x, y):
         writer.writerow([ix, iy])
-##############
-# x is the key
-# y is the pos or value
+
+# x is the key or value of the data
+# y is the position
 # reading data in from csv to make it more versatile
 # Do not need to do this section if you just want to use the data that was just created
-
 values = ["key", "pos"]
 data = pd.read_csv(r"C:/Users/black/CS499/simpleRMI/data2.csv", header=None, skipinitialspace=True,
                    names=values, na_values=["?"], sep=',')
@@ -110,39 +115,34 @@ data["pos"] = data.pos.astype(float)
 
 x_data = data["key"].values
 y_data = data["pos"].values
-
 # if you want to do a train test split
 #X_train, X_test, y_train, y_test = train_test_split(x_data, y_data, test_size=0.0001)
-#################
-# building the neural network
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-config = tf.compat.v1.ConfigProto()
-config.gpu_options.allow_growth = True
-session = tf.compat.v1.Session(config=config)
-
-
-pre_pos_ML = []
-
+predicted_pos_ML = []
+# you have to manually put in the x value
 key = 36214
 # position of the key you are trying to predict
+# you have to manually put in the y value
+# it is 1 minus the actual y because the cells in excel start a position 0 and data starts a 1
 key_pos_list = 200
 # if you want to test multiple x(key) values at a time
 #ex. array = np.array([0,100,101])
-array = np.array([key_pos_list])
+test_array = np.array([key_pos_list])
 # if you want to test multiple x(key) values at a time
 test_key = key  # x_data[array]
-array = [key]
+test_array = [key]
+print(test_array[0])
 print("The key(s) you are testing:", test_key)
 
-
-# start of NN
+# added the ability to do multiple runs of the NN to get the best results
 all_nn = []
-for i in range(0, 1):
+num_nn = 2
+for i in range(0, num_nn):
+    # start of NN
     def build_model():
         model = models.Sequential()
-        model.add(layers.Dense(32, activation='relu', input_shape=(1,)))
-        model.add(layers.Dense(32, activation='relu'))
+        model.add(layers.Dense(16, activation='relu', input_shape=(1,)))
+        model.add(layers.Dense(16, activation='relu'))
         model.add(layers.Dense(1))
         # found better results with mae than mse
         model.compile(optimizer='adam',
@@ -151,34 +151,32 @@ for i in range(0, 1):
         return model
 
     model = build_model()
-    model.fit(x_data, y_data, epochs=200, batch_size=10, verbose=0)
+    model.fit(x_data, y_data, epochs=100, batch_size=50, verbose=0)
     mse_score, mae_score = model.evaluate(x_data, y_data)
-    all_nn.append([mae_score, mse_score, model.predict_on_batch(array)])
 
+    all_nn.append([mae_score, mse_score, model.predict_on_batch(test_array)])
 
-def getKey(item):
-    return item[0]
-
-
-sorted(all_nn, key=getKey)
+# sorted by
 # mae - mean absolute error
 # mse - mean squared error
-print(all_nn[0][2])
-###################
+# then prediction
+# for each NN
+all_nn.sort(key=lambda array: array[0])
 
-for i in range(0, 1):
+# prints our all predictions in sorted order
+for i in range(0, num_nn):
     print("Pred:", all_nn[i])
 
+# prints the best prediction based on the smallest mae
 # getting the predictions from the NN
-f_pred_nn = model.predict_on_batch(array)
+f_pred_nn = all_nn[0][2]
 print("The predictions for the position of the key(s) are:", f_pred_nn)
 
 # getting one x(key) value to run the linear models on
-# this value will now go to stage 2 of the RMI
+# this value will now go to stage 2 of the LIS
 fine_tune_pred = math.ceil(f_pred_nn)
 print("The prediction for the position of the key that is going to the linear model:", fine_tune_pred)
-
-pre_pos_ML.append(f_pred_nn)
+predicted_pos_ML.append(f_pred_nn)
 
 # for grid search
 # https://medium.com/datadriveninvestor/an-introduction-to-grid-search-ff57adcc0998
@@ -196,7 +194,7 @@ clf_gs = GridSearchCV(
 clf_gs.fit(xs_data, np.ravel(ys_data))
 print(clf_gs.predict([[key]]))
 pred_svm = clf_gs.predict([[key]])
-pre_pos_ML.append(pred_svm)
+predicted_pos_ML.append(pred_svm)
 # print(clf_gs)
 
 print(clf_gs.best_score_)
@@ -210,10 +208,9 @@ print("Best gamma value:", clf_gs.best_estimator_.gamma)
 neigh = KNeighborsRegressor(n_neighbors=3)
 neigh.fit(xs_data, np.ravel(ys_data))
 
-print(neigh.predict([[key]]))
 pred_knn = neigh.predict([[key]])
-
-pre_pos_ML.append(pred_knn)
+print("Prediction for KNN:", pred_knn)
+predicted_pos_ML.append(pred_knn)
 
 # https://scikit-learn.org/stable/auto_examples/tree/plot_tree_regression.html
 # Decision Tree
@@ -231,9 +228,9 @@ y_1 = regr_1.predict(X_test)
 y_2 = regr_2.predict(X_test)
 y_3 = regr_3.predict(X_test)
 
-pre_pos_ML.append(y_1[-1])
-pre_pos_ML.append(y_2[-1])
-pre_pos_ML.append(y_3[-1])
+predicted_pos_ML.append(y_1[-1])
+predicted_pos_ML.append(y_2[-1])
+predicted_pos_ML.append(y_3[-1])
 
 print("Using max depth 1:", y_1[-1], "\nThe entire decisions:", y_1)
 print("Using max depth 5:", y_2[-1], "\nThe entire decisions:", y_2)
@@ -257,9 +254,9 @@ plt.legend()
 clf_r = linear_model.BayesianRidge()
 clf_r.fit(xs_data, np.ravel(ys_data))
 
-print(clf_r.predict([[key]]))
 pred_br = clf_r.predict([[key]])
-pre_pos_ML.append(pred_br)
+predicted_pos_ML.append(pred_br)
+print("Predicted position for BR:", pred_br)
 
 
 # https://scikit-learn.org/stable/auto_examples/ensemble/plot_gradient_boosting_regression.html
@@ -275,7 +272,7 @@ print("Predicted position for", key, " ", clf_gb.predict([[key]]))
 
 
 pred_gb = clf_gb.predict([[key]])
-pre_pos_ML.append(pred_gb)
+predicted_pos_ML.append(pred_gb)
 
 test_score = np.zeros((params['n_estimators'],), dtype=np.float64)
 for i, y_pred in enumerate(clf_gb.staged_predict(xs_data)):
@@ -291,19 +288,7 @@ plt.legend(loc='upper right')
 plt.xlabel('Boosting Iterations')
 plt.ylabel('Deviance')
 
-
-# NN
-# SVM
-# KNN
-# Decision Tree 1,2,3
-# Bayesian Ridge
-# Gradient Boosting
-###########################################################################################################
-
-
-print(pre_pos_ML)
-
-
+# Stage 2
 # how many different buckets
 buckets = 100
 
@@ -316,13 +301,12 @@ xdata = np.array_split(x_data, buckets)
 ydata = np.array_split(y_data, buckets)
 
 
-print("***********This is the pre_pos_ML", pre_pos_ML,
-      "*********************************************************")
+print("\n\nThe predicted_pos_ML", predicted_pos_ML)
 ml_algo = ["NN", "SVM", "KNN", "DT1", "DT2", "DT3", "BR", "GB"]
 num_it = []
 counter = 0
 fig_num = 7
-for fine_tune_pred in pre_pos_ML:
+for fine_tune_pred in predicted_pos_ML:
     print("\n\n\nNow using", ml_algo[counter])
     for i in range(0, buckets):
         # seeing which bucket will the NN prediction fall into
@@ -334,7 +318,6 @@ for fine_tune_pred in pre_pos_ML:
             in_bucket = i
 
     # creating a linear regression model on the dataset in the chosen bucket
-
     # linear regression model
     re_x_data = xdata[in_bucket].reshape(-1, 1)
     re_y_data = ydata[in_bucket].reshape(-1, 1)
