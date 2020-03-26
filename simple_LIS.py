@@ -98,7 +98,6 @@ print(duplicates)
 # writing the x to col 1 and y to col 2 in a csv file
 with open('data2.csv', 'w', newline='') as file:
     writer = csv.writer(file)
-
     for ix, iy in zip(x, y):
         writer.writerow([ix, iy])
 
@@ -134,6 +133,9 @@ test_array = [key]
 print(test_array[0])
 print("The key(s) you are testing:", test_key)
 
+xs_data = x_data.reshape(-1, 1)
+ys_data = y_data.reshape(-1, 1)
+
 # added the ability to do multiple runs of the NN to get the best results
 all_nn = []
 num_nn = 2
@@ -151,8 +153,8 @@ for i in range(0, num_nn):
         return model
 
     model = build_model()
-    model.fit(x_data, y_data, epochs=100, batch_size=50, verbose=0)
-    mse_score, mae_score = model.evaluate(x_data, y_data)
+    model.fit(xs_data, ys_data, epochs=100, batch_size=50, verbose=0)
+    mse_score, mae_score = model.evaluate(xs_data, ys_data)
 
     all_nn.append([mae_score, mse_score, model.predict_on_batch(test_array)])
 
@@ -181,8 +183,6 @@ predicted_pos_ML.append(f_pred_nn)
 # for grid search
 # https://medium.com/datadriveninvestor/an-introduction-to-grid-search-ff57adcc0998
 # SVM
-xs_data = x_data.reshape(-1, 1)
-ys_data = y_data.reshape(-1, 1)
 clf_gs = GridSearchCV(
     estimator=SVR(kernel='rbf'),
     param_grid={
