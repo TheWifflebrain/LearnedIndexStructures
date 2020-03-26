@@ -1,6 +1,7 @@
-# import os
+import os
 import csv
 import math
+import time
 import random
 import numpy as np
 import pandas as pd
@@ -35,7 +36,62 @@ from matplotlib.ticker import PercentFormatter
 # config.gpu_options.allow_growth = True
 # session = tf.compat.v1.Session(config=config)
 
-total_items = 25
+# https://www.geeksforgeeks.org/insertion-sort/
+
+
+def insertionSort(arr):
+
+    # Traverse through 1 to len(arr)
+    for i in range(1, len(arr)):
+
+        key = arr[i]
+
+        # Move elements of arr[0..i-1], that are
+        # greater than key, to one position ahead
+        # of their current position
+        j = i-1
+        while j >= 0 and key < arr[j]:
+            arr[j + 1] = arr[j]
+            j -= 1
+        arr[j + 1] = key
+
+# https://www.geeksforgeeks.org/python-program-for-quicksort/
+
+
+def partition(arr, low, high):
+    i = (low-1)         # index of smaller element
+    pivot = arr[high]     # pivot
+
+    for j in range(low, high):
+
+        # If current element is smaller than or
+        # equal to pivot
+        if arr[j] <= pivot:
+
+            # increment index of smaller element
+            i = i+1
+            arr[i], arr[j] = arr[j], arr[i]
+
+    arr[i+1], arr[high] = arr[high], arr[i+1]
+    return (i+1)
+
+# Function to do Quick sort
+
+
+def quickSort(arr, low, high):
+    if low < high:
+
+        # pi is partitioning index, arr[p] is now
+        # at right place
+        pi = partition(arr, low, high)
+
+        # Separately sort elements before
+        # partition and after partition
+        quickSort(arr, low, pi-1)
+        quickSort(arr, pi+1, high)
+
+
+total_items = 1000
 # Creating the dataset
 # the key or value of the data
 x = []
@@ -46,7 +102,7 @@ for i in range(1, (total_items) + 1):
     # as long as the function is monotonic will predict accurately
     # so num = math.sin(i) will not predict accurately as it should
     # num = math.ceil(2 ** 3 + 4 ** (2) * + 3*i * math.log(i))
-    num = 8*i  # + random.randrange(0,6)
+    num = 10*i  # + random.randrange(0,6)
     # num = (i ** 2) - 21*(i) + 34
     x.append(num)
 
@@ -94,6 +150,7 @@ randomize = list(zip(x, y))
 random.shuffle(randomize)
 x, y = zip(*randomize)
 
+
 # writing the x to col 1 and y to col 2 in a csv file
 with open('C:/Users/black/CS499/simpleRMI/data_sort_linear.csv', 'w', newline='') as file:
     writer = csv.writer(file)
@@ -117,27 +174,35 @@ y_data = data["pos"].values
 xs_data = x_data.reshape(-1, 1)
 ys_data = y_data.reshape(-1, 1)
 
-neigh = KNeighborsRegressor(n_neighbors=4)
+# print(x_data)
+x_insert = x_data
+x_quick = x_data
+
+neigh = KNeighborsRegressor(n_neighbors=1)
 neigh.fit(xs_data, np.ravel(ys_data))
 
+# start time
+t0 = time.perf_counter()
 pred_knn = neigh.predict(xs_data)
-print("Prediction for KNN:", pred_knn)
+#print("Prediction for KNN:", pred_knn)
 
 # making sure there are no duplicates
 list_pred = pred_knn.tolist()
-duplicates = []
-for item in list_pred:
-    if list_pred.count(item) > 1:
-        duplicates.append(item)
-print("Duplicates:", duplicates)
+# print(list_pred)
+
+# duplicates = []
+# for item in list_pred:
+#     if list_pred.count(item) > 1:
+#         duplicates.append(item)
+#print("Duplicates:", duplicates)
 
 int_pred = [math.floor(int(x)) for x in list_pred]
-print("Predictions:", int_pred)
+#print("Predictions:", int_pred)
 
 # put xs_data in position predictions
 xs_data_list = xs_data.tolist()
-# data_list = [int(x) for x in xs_data_list]
-print("Values:", xs_data_list)
+#print("Values:", xs_data_list)
+
 
 count = 0
 notsortedx = []
@@ -151,43 +216,73 @@ for i in range(0, total_items):
         notsortedy.append((int_pred[i])-1)
         count = count + 1
 
-print(sorted_list)
-print(notsortedx)
-print(notsortedy)
+# print(sorted_list)
+# print(notsortedx)
+# print(notsortedy)
 
-# if not sorted
-# figure out what did not get inputted in the sorted list
-# then sort the list with those variables in it
-itr = 0
-for i in range(0, count):
-    placing = 1
-    index = notsortedy[i]
-    count = 0
-    increment = 1
-    while placing == 1:
-        checked = 0
-        print("list:", notsortedx[i])
-        print("index:", index)
-        print("count:", count)
-        if(sorted_list[index] == -1):
-            sorted_list[index] = notsortedx[i]
-            placing = 0
-        elif(count % 2 == 0):
-            index = notsortedy[i]
-            index = index + increment
-            if(index >= total_items):
-                index = (total_items - 1)
-            checked = 1
-        elif(count % 2 == 1):
-            index = notsortedy[i]
-            index = index - increment
-            if(index < 0):
-                index = 0
-            checked = 1
-        if(count % 2 == 0):
-            increment += 1
-        count += 1
-        itr += 1
+if len(notsortedx) == 0:
+    t1 = time.perf_counter() - t0
+else:
+    # if not sorted
+    # figure out what did not get inputted in the sorted list
+    # then sort the list with those variables in it
+    #itr = 0
+    for i in range(0, count):
+        placing = 1
+        index = notsortedy[i]
+        count = 0
+        increment = 1
+        while placing == 1:
+            checked = 0
+            #print("list:", notsortedx[i])
+            #print("index:", index)
+            #print("count:", count)
+            if(sorted_list[index] == -1):
+                sorted_list[index] = notsortedx[i]
+                placing = 0
+            elif(count % 2 == 0):
+                index = notsortedy[i]
+                index = index + increment
+                if(index >= total_items):
+                    index = (total_items - 1)
+                checked = 1
+            elif(count % 2 == 1):
+                index = notsortedy[i]
+                index = index - increment
+                if(index < 0):
+                    index = 0
+                checked = 1
+            if(count % 2 == 0):
+                increment += 1
+            count += 1
+            #itr += 1
 
-print(itr)
-print(sorted_list)
+    # print(itr)
+    # print(sorted_list)
+
+    insertionSort(sorted_list)
+    # print(sorted_list)
+
+    # end time
+    t1 = time.perf_counter() - t0
+
+print("ML sorting:", t1)
+
+
+# quick sort
+t0 = time.perf_counter()
+
+quickSort(x_quick, 0, total_items-1)
+# print(x_quick)
+
+t1 = time.perf_counter() - t0
+print("Quick sort:", t1)
+
+# insertion sort
+t0 = time.perf_counter()
+
+insertionSort(x_insert)
+# print(x_insert)
+
+t1 = time.perf_counter() - t0
+print("Insertions:", t1)
