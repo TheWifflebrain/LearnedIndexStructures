@@ -1,4 +1,4 @@
-#import os
+# import os
 import csv
 import math
 import random
@@ -113,12 +113,11 @@ data["pos"] = data.pos.astype(float)
 
 x_data = data["key"].values
 y_data = data["pos"].values
-# if you want to do a train test split
-# X_train, X_test, y_train, y_test = train_test_split(x_data, y_data, test_size=0.0001)
+
 xs_data = x_data.reshape(-1, 1)
 ys_data = y_data.reshape(-1, 1)
 
-neigh = KNeighborsRegressor(n_neighbors=1)
+neigh = KNeighborsRegressor(n_neighbors=4)
 neigh.fit(xs_data, np.ravel(ys_data))
 
 pred_knn = neigh.predict(xs_data)
@@ -130,22 +129,65 @@ duplicates = []
 for item in list_pred:
     if list_pred.count(item) > 1:
         duplicates.append(item)
-print(duplicates)
+print("Duplicates:", duplicates)
 
-int_pred = [int(x) for x in list_pred]
-print(int_pred)
+int_pred = [math.floor(int(x)) for x in list_pred]
+print("Predictions:", int_pred)
 
 # put xs_data in position predictions
 xs_data_list = xs_data.tolist()
-#data_list = [int(x) for x in xs_data_list]
-print(xs_data_list)
+# data_list = [int(x) for x in xs_data_list]
+print("Values:", xs_data_list)
 
-sorted_list = [0]*total_items
+count = 0
+notsortedx = []
+notsortedy = []
+sorted_list = [-1]*total_items
 for i in range(0, total_items):
-    sorted_list[(int_pred[i])-1] = xs_data_list[i]
+    if(sorted_list[(int_pred[i])-1] == -1):
+        sorted_list[(int_pred[i])-1] = xs_data_list[i]
+    else:
+        notsortedx.append(xs_data_list[i])
+        notsortedy.append((int_pred[i])-1)
+        count = count + 1
 
 print(sorted_list)
+print(notsortedx)
+print(notsortedy)
 
 # if not sorted
 # figure out what did not get inputted in the sorted list
 # then sort the list with those variables in it
+itr = 0
+for i in range(0, count):
+    placing = 1
+    index = notsortedy[i]
+    count = 0
+    increment = 1
+    while placing == 1:
+        checked = 0
+        print("list:", notsortedx[i])
+        print("index:", index)
+        print("count:", count)
+        if(sorted_list[index] == -1):
+            sorted_list[index] = notsortedx[i]
+            placing = 0
+        elif(count % 2 == 0):
+            index = notsortedy[i]
+            index = index + increment
+            if(index >= total_items):
+                index = (total_items - 1)
+            checked = 1
+        elif(count % 2 == 1):
+            index = notsortedy[i]
+            index = index - increment
+            if(index < 0):
+                index = 0
+            checked = 1
+        if(count % 2 == 0):
+            increment += 1
+        count += 1
+        itr += 1
+
+print(itr)
+print(sorted_list)
