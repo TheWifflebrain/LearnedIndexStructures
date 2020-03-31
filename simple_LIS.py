@@ -143,8 +143,8 @@ for i in range(0, num_nn):
     # start of NN
     def build_model():
         model = models.Sequential()
-        model.add(layers.Dense(16, activation='relu', input_shape=(1,)))
-        model.add(layers.Dense(16, activation='relu'))
+        model.add(layers.Dense(32, activation='relu', input_shape=(1,)))
+        model.add(layers.Dense(32, activation='relu'))
         model.add(layers.Dense(1))
         # found better results with mae than mse
         model.compile(optimizer='adam',

@@ -222,7 +222,7 @@ def quickSort(arr, low, high):
         quickSort(arr, pi+1, high)
 
 
-total_items = 100000
+total_items = 1000
 # Creating the dataset
 # the key or value of the data
 x = []
@@ -232,9 +232,9 @@ for i in range(1, (total_items) + 1):
     y.append(i)
     # as long as the function is monotonic will predict accurately
     # so num = math.sin(i) will not predict accurately as it should
-    # num = math.ceil(2 ** 3 + 4 ** (2) * + 3*i * math.log(i))
-    num = 10*i  # + random.randrange(0,6)
-    # num = (i ** 2) - 21*(i) + 34
+    num = math.ceil(2 ** 3 + 4 ** (2) * + 3*i * math.log(i))
+    # num = 10*i  # + random.randrange(0,6)
+    #num = (i ** 2) - 21*(i) + 34
     x.append(num)
 
 # y will be from 1 to total_items
@@ -307,7 +307,8 @@ ys_data = y_data.reshape(-1, 1)
 # print(x_data)
 
 # making predictions for ml
-neigh = KNeighborsRegressor(n_neighbors=25)
+tML = time.perf_counter()
+neigh = KNeighborsRegressor(n_neighbors=1)
 neigh.fit(xs_data, np.ravel(ys_data))
 
 # start time for ml
@@ -401,11 +402,13 @@ else:
     insertionSort(sorted_list)
     # print(sorted_list)
 
-    # end time
-    t1 = time.perf_counter() - t0
+# end time
+t1 = time.perf_counter() - t0
+t1ML = time.perf_counter() - tML
 
 print("Completely sorted by ml:", first_sorted)
 print("Non sorted elements:", len(notsortedx))
+print("SMLsorting:", t1ML)
 print("ML sorting:", t1)
 
 # will compare sorting times with other sorts
