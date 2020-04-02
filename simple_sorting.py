@@ -29,10 +29,10 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 from matplotlib.ticker import PercentFormatter
 
-# os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-# config = tf.compat.v1.ConfigProto()
-# config.gpu_options.allow_growth = True
-# session = tf.compat.v1.Session(config=config)
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+config = tf.compat.v1.ConfigProto()
+config.gpu_options.allow_growth = True
+session = tf.compat.v1.Session(config=config)
 
 # https://www.growingwiththeweb.com/2015/06/bucket-sort.html
 # bucket sort
@@ -308,7 +308,11 @@ ys_data = y_data.reshape(-1, 1)
 
 # making predictions for ml
 tML = time.perf_counter()
-neigh = KNeighborsRegressor(n_neighbors=1)
+# KNN
+#neigh = KNeighborsRegressor(n_neighbors=500)
+#neigh.fit(xs_data, np.ravel(ys_data))
+# DT
+neigh = DecisionTreeRegressor(max_depth=9)
 neigh.fit(xs_data, np.ravel(ys_data))
 
 # start time for ml
@@ -464,4 +468,4 @@ bucketSort(x_bucket)
 t1 = time.perf_counter() - t0
 print("bucketsort:", t1)
 
-plt.plot()
+plt.show()

@@ -45,13 +45,14 @@ session = tf.compat.v1.Session(config=config)
 x = []
 # the position of the data
 y = []
-for i in range(1, 1001):
+for i in range(0, 1001):
     y.append(i)
     # as long as the function is monotonic will predict accurately
     # so num = math.sin(i) will not predict accurately as it should
     #num = math.ceil(2 ** 3 + 4 ** (2) * + 3*i * math.log(i))
     #num = 8*i + random.randrange(0,6)
-    num = (i ** 2) - 21*(i) + 34
+    num = (i ** 2) + 21*(i) + 34
+    #num = math.sin(i)
     x.append(num)
 
 # y will be from 1 to 1000
@@ -96,7 +97,7 @@ print(duplicates)
 # the paper said to have the data be sorted also (I made the equation so that it would be sorted)
 
 # writing the x to col 1 and y to col 2 in a csv file
-with open('data2.csv', 'w', newline='') as file:
+with open('C:/Users/black/CS499/simpleRMI/data2.csv', 'w', newline='') as file:
     writer = csv.writer(file)
     for ix, iy in zip(x, y):
         writer.writerow([ix, iy])
@@ -119,11 +120,12 @@ y_data = data["pos"].values
 
 predicted_pos_ML = []
 # you have to manually put in the x value
-key = 36214
+key = 37366
 # position of the key you are trying to predict
 # you have to manually put in the y value
 # it is 1 minus the actual y because the cells in excel start a position 0 and data starts a 1
-key_pos_list = 200
+key_pos_list = 183
+
 # if you want to test multiple x(key) values at a time
 #ex. array = np.array([0,100,101])
 test_array = np.array([key_pos_list])
@@ -144,6 +146,9 @@ for i in range(0, num_nn):
     def build_model():
         model = models.Sequential()
         model.add(layers.Dense(32, activation='relu', input_shape=(1,)))
+        model.add(layers.Dense(32, activation='relu'))
+        model.add(layers.Dense(32, activation='relu'))
+        model.add(layers.Dense(32, activation='relu'))
         model.add(layers.Dense(32, activation='relu'))
         model.add(layers.Dense(1))
         # found better results with mae than mse
@@ -205,7 +210,7 @@ print("Best gamma value:", clf_gs.best_estimator_.gamma)
 
 # https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsRegressor.html
 # KNN
-neigh = KNeighborsRegressor(n_neighbors=3)
+neigh = KNeighborsRegressor(n_neighbors=1)
 neigh.fit(xs_data, np.ravel(ys_data))
 
 pred_knn = neigh.predict([[key]])
@@ -329,7 +334,8 @@ for fine_tune_pred in predicted_pos_ML:
           "* X", "+", regressor.intercept_)
     print("The equation for the specified key",
           regressor.coef_, "*", key, "+", regressor.intercept_)
-    predicted_position = regressor.coef_ * key + regressor.intercept_
+    predicted_position = math.ceil(
+        regressor.coef_ * key + regressor.intercept_)
     print("The linear model predicted the position:", predicted_position)
     actual = math.ceil(y_data[key_pos_list])
     print("The actual position of the key:", actual)
